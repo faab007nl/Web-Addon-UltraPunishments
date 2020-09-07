@@ -1,4 +1,4 @@
-#UltraPunishments
+UltraPunishments
 Web Addon by EazyFTW & Faab007NL
 
 Description:
