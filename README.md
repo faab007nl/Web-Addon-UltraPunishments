@@ -11,9 +11,10 @@ https://upunaddon.fabiandingemans.nl/
 Installation:
 1) Download.
 2) Extract and upload.
-3) Go to the website.
-4) Enter the database and user information and click Done
-5) Done!
+3) Rename "rename to .htacces" to ".htacces"
+4) Go to the website.
+5) Enter the database and user information and click Done
+6) Done!
 
 Support:
 Join the ultra customizer Discord and tag me (@Faab007NL#9999)
