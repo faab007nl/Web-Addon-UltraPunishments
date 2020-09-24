@@ -40,5 +40,7 @@
 	"done":"",
 	"signout":"",
 	"loginwrong": "",
-	"languagesettings": ""
+	"languagesettings": "",
+	"dberror":"",
+	"usernametaken":""
 }

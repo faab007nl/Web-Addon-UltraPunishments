@@ -40,5 +40,7 @@
 	"done":"Done",
 	"signout":"Sign Out",
 	"loginwrong": "Wrong Username Or Password",
-	"languagesettings": "Language Settings"
+	"languagesettings": "Language Settings",
+	"dberror":"An unknown error has occurred!",
+	"usernametaken":"This username is already in use."
 }

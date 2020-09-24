@@ -1,23 +1,38 @@
 <?php
     include 'inc/functions.php';
-    include 'inc/config.php';
-    include 'inc/mysql.php';
     include 'inc/server.php';
     require_once "inc/Mobile_Detect.php";
-    $detect = new Mobile_Detect;
-
+    
+    $detect = new Mobile_Detect;    
     if(isset($_SESSION['UserId'])){
         $UserId = $_SESSION['UserId'];
-        $username = $_SESSION['Username'];
-        $Role = $_SESSION['Role'];
-        if($Role != "admin"){
-            header('location: ./punishments');
+        $pdoResult = $PDOdb->prepare("SELECT * FROM WebAddon_Users WHERE Id=:Id LIMIT 1");
+        $pdoExec = $pdoResult->execute(array(":Id"=>$UserId));
+        $rowcount = $pdoResult->rowCount();
+        
+        if($pdoExec){
+            if($rowcount != 0){
+                while($row = $pdoResult->fetch(PDO::FETCH_ASSOC)){
+                    $username = $row['Username'];
+                    $Role = $row['Role'];
+                    if($Role != "admin"){
+                        header('location: ./punishments');
+                        echo '
+                        <script>
+                            location.replace("./punishments");
+                            window.location.href = "./punishments"
+                        </script>
+                        ';
+                    }
+                }
+            }
+        }else{
             echo '
-            <script>
-                location.replace("./punishments");
-                window.location.href = "./punishments"
-            </script>
-            ';
+            <div style="background-color: rgba(255,0,0,0.6); position: absolute; top: 0px; left: 0px; bottom:0px; right: 0px; z-index: 5000; cursor: wait;">
+                <div style="position: absolute;top: 25%; left: 10%;font-size: 50px; width:80%; color: white;">
+                    <p style="text-align: center;">Can`t connect to DataBase<br/>Please check the dbconfig.php file</p>
+                </div>
+            </div>';
         }
     }else{
         header('location: ./');
@@ -139,37 +154,43 @@
                                 </thead>
                                 <tbody class="table-body">
                                     <?php
-                                        $json2 = file_get_contents('./inc/users.json');
-                                        $users = json_decode($json2);
-                                        $index = 0;
-
-                                        foreach ($users as $user) {
-                                            if($user->Role == "admin"){
-                                               $role = $lang->admin;
-                                            }else{
-                                                $role = $lang->default;
+                                        $pdoResult = $PDOdb->prepare("SELECT * FROM WebAddon_Users");
+                                        $pdoExec = $pdoResult->execute();
+                                        
+                                        if($pdoExec){
+                                            while($row = $pdoResult->fetch(PDO::FETCH_ASSOC)){
+                                                $UId = $row['Id'];
+                                                $username = $row['Username'];
+                                                $role = $row['Role'];
+                                                
+                                                if($role == "admin"){
+                                                    $role == $lang->admin;
+                                                }elseif($role == "default"){
+                                                    $role == $lang->default;
+                                                }
+                                                
+                                                if($UserId == $UId){
+                                                    echo '
+                                                        <tr>
+                                                            <td class="table-cell">'.$UId.'</td>
+                                                            <td class="table-cell">'.$username.'</td>
+                                                            <td class="table-cell">'.$role.'</td>
+                                                            <td class="table-cell">'.$lang->none.'</td>
+                                                        </tr>
+                                                    ';
+                                                }else{
+                                                    echo '
+                                                        <tr>
+                                                            <td class="table-cell">'.$UId.'</td>
+                                                            <td class="table-cell">'.$username.'</td>
+                                                            <td class="table-cell">'.$role.'</td>
+                                                            <td class="table-cell"><a class="btn btn-primary" style="color:white;" type="button" href="inc/server.php?methode=deleteuser&UId='.$UId.'">'.$lang->delete.'</a></td>
+                                                        </tr>
+                                                    ';
+                                                }
                                             }
-
-                                            if($user->UserId == $UserId){
-                                                echo '
-                                                    <tr>
-                                                        <td class="table-cell">'.$user->UserId.'</td>
-                                                        <td class="table-cell">'.$user->Username.'</td>
-                                                        <td class="table-cell">'.$role.'</td>
-                                                        <td class="table-cell">'.$lang->none.'</td>
-                                                    </tr>
-                                                ';
-                                            }else{
-                                                echo '
-                                                    <tr>
-                                                        <td class="table-cell">'.$user->UserId.'</td>
-                                                        <td class="table-cell">'.$user->Username.'</td>
-                                                        <td class="table-cell">'.$role.'</td>
-                                                        <td class="table-cell"><a class="btn btn-primary" style="color:white;" type="button" href="inc/server.php?methode=deleteuser&index='.$index.'">'.$lang->delete.'</a></td>
-                                                    </tr>
-                                                ';
-                                            }
-                                            $index++;
+                                        }else{
+                                            echo 'Something has gone wrong';
                                         }
                                     ?>
                                 </tbody>

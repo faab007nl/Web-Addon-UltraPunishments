@@ -1,23 +1,38 @@
 <?php
     include 'inc/functions.php';
-    include 'inc/config.php';
-    include 'inc/mysql.php';
     include 'inc/server.php';
     require_once "inc/Mobile_Detect.php";
-    $detect = new Mobile_Detect;
     
+    $detect = new Mobile_Detect;    
     if(isset($_SESSION['UserId'])){
         $UserId = $_SESSION['UserId'];
-        $username = $_SESSION['Username'];
-        $Role = $_SESSION['Role'];
-        if($Role != "admin"){
-            header('location: ./punishments');
+        $pdoResult = $PDOdb->prepare("SELECT * FROM WebAddon_Users WHERE Id=:Id LIMIT 1");
+        $pdoExec = $pdoResult->execute(array(":Id"=>$UserId));
+        $rowcount = $pdoResult->rowCount();
+        
+        if($pdoExec){
+            if($rowcount != 0){
+                while($row = $pdoResult->fetch(PDO::FETCH_ASSOC)){
+                    $username = $row['Username'];
+                    $Role = $row['Role'];
+                    if($Role != "admin"){
+                        header('location: ./punishments');
+                        echo '
+                        <script>
+                            location.replace("./punishments");
+                            window.location.href = "./punishments"
+                        </script>
+                        ';
+                    }
+                }
+            }
+        }else{
             echo '
-            <script>
-                location.replace("./punishments");
-                window.location.href = "./punishments"
-            </script>
-            ';
+            <div style="background-color: rgba(255,0,0,0.6); position: absolute; top: 0px; left: 0px; bottom:0px; right: 0px; z-index: 5000; cursor: wait;">
+                <div style="position: absolute;top: 25%; left: 10%;font-size: 50px; width:80%; color: white;">
+                    <p style="text-align: center;">Can`t connect to DataBase<br/>Please check the dbconfig.php file</p>
+                </div>
+            </div>';
         }
     }else{
         header('location: ./');
@@ -52,18 +67,20 @@
 
 <body>
     <div class="LeaveBtnDiv">
-        <a class="LeaveBtn" href="./"><i title="<?php echo $lang->back; ?>" class="fas fa-arrow-left"></i></a>
+        <a class="LeaveBtn" href="./settings"><i title="<?php echo $lang->back; ?>" class="fas fa-arrow-left"></i></a>
     </div>
     <div class="row no-gutters justify-content-center bannerrow">
         <div class="col-auto"><img class="img-fluid bannerimg" src="assets/img/banner.png">
             <div class="panel">
                 <h3 class="h3custom">UltraPunishments&nbsp;v<?php echo $version; ?><br></h3><span class="madeby"><?php echo $lang->webaddonby; ?>&nbsp;<a href="https://www.spigotmc.org/members/eazyftw.55966/">EazyFTW</a>&nbsp;&amp;&nbsp;<a href="https://www.spigotmc.org/members/faab007.324536/">Faab007NL</a><br></span>
-                <a href="./settings"><?php echo $lang->back; ?></a>
                 <h2><?php echo $lang->adduser; ?></h2>
                 <?php
                     if(isset($_SESSION['Error'])){
-                        if($_SESSION['Error'] == "WrongUsernameOrPassword"){
-                            echo 'Wrong Username Or Password';
+                        if($_SESSION['Error'] == "usernametaken"){
+                            echo '<div class="error_msg"><strong>'.$lang->usernametaken.'</strong></div>';
+                        }
+                        if($_SESSION['Error'] == "dberror"){
+                            echo '<div class="error_msg"><strong>'.$lang->dberror.'</strong></div>';
                         }
                         $_SESSION['Error'] = "";
                     }

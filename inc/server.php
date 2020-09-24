@@ -1,6 +1,17 @@
 <?php 
 	date_default_timezone_set('Europe/Amsterdam');
 	session_start();
+
+	include_once('mysql.php');
+
+	$configjson = file_get_contents(dirname(__DIR__).'/inc/config.json');
+	$configjson = json_decode($configjson);
+	
+	$version = $configjson->version;
+	$language = $configjson->language;
+
+	$lang = file_get_contents(dirname(__DIR__).'/inc/languages/'.$language.'.json');
+    $lang = json_decode($lang);
 	
 	if (isset($_GET['methode'])){
 		$methode = $_GET['methode'];
@@ -8,33 +19,33 @@
 		$methode = "";
 	}
 
-	$lang = file_get_contents('./inc/languages/'.$language.'.json');
-    $lang = json_decode($lang);
-
 	// Login
 	if (isset($_POST['login'])) {
 		$username = $_POST['username'];
 		$password = $_POST['password'];
 		$password = md5($password);
 		
-		$loginjson = file_get_contents('users.json');
-  		$logindata = json_decode($loginjson);
+		$pdoResult = $PDOdb->prepare("SELECT * FROM WebAddon_Users WHERE Username=:Username AND Password=:Password LIMIT 1");
+		$pdoExec = $pdoResult->execute(array(":Username"=>$username, ":Password"=>$password));
+		$rowcount = $pdoResult->rowCount();
+		
+		if($pdoExec){
+			if($rowcount != 0){
+				while($row = $pdoResult->fetch(PDO::FETCH_ASSOC)){
+					$UserId = $row['Id'];
+					$_SESSION['UserId'] = $UserId;
 
-  		foreach ($logindata as $userdata) {
-  			if($userdata->Username == $username && $userdata->Password == $password){
-				$_SESSION['UserId'] = $userdata->UserId;
-				$_SESSION['Username'] = $userdata->Username;
-				$_SESSION['Role'] = $userdata->Role;
-				
-				header('location: ../punishments');
-				echo '
-				<script>
-					location.replace("../punishments");
-					window.location.href = "../punishments"
-				</script>
-				';
+					header('location: ../punishments');
+					echo '
+					<script>
+						location.replace("../punishments");
+						window.location.href = "../punishments"
+					</script>
+					';
+				}
 			}else{
 				$_SESSION['Error'] = "WrongUsernameOrPassword";
+				echo 'wrong un / pw';
 				header('location: ../');
 				echo '
 				<script>
@@ -43,42 +54,9 @@
 				</script>
 				';
 			}
-  		}
-	}
-
-	// Setup
-	if (isset($_POST['setup'])) {
-		if(file_exists("./inc/dbconfig.php") && file_exists("./inc/users.json")){
-			header('location: ../');
-			echo '
-			<script>
-				location.replace("../");
-				window.location.href = "../"
-			</script>
-			';
 		}else{
-			$dbhostname = $_POST['dbhostname'];
-			$dbdatabase = $_POST['dbdatabase'];
-			$dbusername = $_POST['dbusername'];
-			$dbpassword = $_POST['dbpassword'];
-
-			$username = $_POST['username'];
-			$password = $_POST['password'];
-			$password = md5($password);
-
-			$UserId = substr(str_shuffle("0123456789"), 0, 10);
-			$users[] = array(
-				"UserId" => $UserId,
-				"Username" => $username,
-				"Password" => $password,
-				"Role" => "admin"
-			);
-
-			$dbconfig = '<?php $dbhostname="'.$dbhostname.'";$dbdatabase="'.$dbdatabase.'";$dbusername="'.$dbusername.'";$dbpassword="'.$dbpassword.'"; ?>';
-			$users = json_encode($users);
-			file_put_contents("users.json", $users);
-			file_put_contents("dbconfig.php", $dbconfig);
-			
+			$_SESSION['Error'] = "dberror";
+			echo 'db error';
 			header('location: ../');
 			echo '
 			<script>
@@ -86,38 +64,81 @@
 				window.location.href = "../"
 			</script>
 			';
-		}
+        }
 	}
-
+	
 	// add user
 	if (isset($_POST['adduser'])) {
-		$Role = $_SESSION['Role'];
-		if($Role != "admin"){
+		$UserId = $_SESSION['UserId'];
+        $pdoResult = $PDOdb->prepare("SELECT * FROM WebAddon_Users WHERE Id=:Id LIMIT 1");
+        $pdoExec = $pdoResult->execute(array(":Id"=>$UserId));
+        $rowcount = $pdoResult->rowCount();
+        
+        if($pdoExec){
+            if($rowcount != 0){
+                while($row = $pdoResult->fetch(PDO::FETCH_ASSOC)){
+                    $Role = $row['Role'];
+                }
+            }
+        }else{
+            echo 'Error';
+        }
+
+		if($Role == "admin"){
             $username = $_POST['username'];
 			$password = $_POST['password'];
 			$Role = $_POST['role'];
 			$password = md5($password);
 			
-			$UserId = substr(str_shuffle("0123456789"), 0, 10);
-			$json = file_get_contents('users.json');
-			$data = json_decode($json);
+			$pdoResult = $PDOdb->prepare("SELECT * FROM WebAddon_Users WHERE Username=:Username");
+			$pdoExec = $pdoResult->execute(array(":Username"=>$username));
+			$rowcount = $pdoResult->rowCount();
 			
-			$data[] = array(
-				'UserId' => $UserId,
-				'Username' => $username,
-				'Password' => $password,
-				'Role' => $Role
-			);
-			
-			file_put_contents('users.json', json_encode($data));
-
-			header('location: ../settings');
-			echo '
-			<script>
-				location.replace("../settings");
-				window.location.href = "../settings"
-			</script>
-			';
+			if($pdoExec){
+				if($rowcount != 0){
+					$_SESSION['Error'] = "usernametaken";
+					header('location: ../adduser');
+					echo '
+					<script>
+						location.replace("../adduser");
+						window.location.href = "../adduser"
+					</script>
+					';
+				}else{
+					$pdoResult = $PDOdb->prepare("INSERT INTO WebAddon_Users(Id, Username, Password, Role) VALUES (NULL, :Username, :Password, :Role)");
+					$pdoExec = $pdoResult->execute(array(":Username"=>$username, ":Password"=>$password, ":Role"=>$Role));
+					$rowcount = $pdoResult->rowCount();
+					
+					if($pdoExec){
+						header('location: ../settings');
+						echo '
+						<script>
+							location.replace("../settings");
+							window.location.href = "../settings"
+						</script>
+						';
+					}else{
+						$_SESSION['Error'] = "dberror";
+						header('location: ../adduser');
+						echo '
+						<script>
+							location.replace("../adduser");
+							window.location.href = "../adduser"
+						</script>
+						';
+				    }
+				}
+			}else{
+				$_SESSION['Error'] = "dberror";
+				
+				header('location: ../');
+				echo '
+				<script>
+					location.replace("../");
+					window.location.href = "../"
+				</script>
+				';
+	        }
         }else{
         	header('location: ../');
 			echo '
@@ -131,24 +152,46 @@
 	
 	//delete user
 	if ($methode == "deleteuser") {
-		$Role = $_SESSION['Role'];
-		if($Role == "admin"){
-			$index = $_GET['index'];
-			
-			$json = file_get_contents('users.json');
-			$data = json_decode($json);
-			
-			unset($data[$index]);
-			
-			file_put_contents('users.json', json_encode($data));
+		$UserId = $_SESSION['UserId'];
+        $pdoResult = $PDOdb->prepare("SELECT * FROM WebAddon_Users WHERE Id=:Id LIMIT 1");
+        $pdoExec = $pdoResult->execute(array(":Id"=>$UserId));
+        $rowcount = $pdoResult->rowCount();
+        
+        if($pdoExec){
+            if($rowcount != 0){
+                while($row = $pdoResult->fetch(PDO::FETCH_ASSOC)){
+                    $Role = $row['Role'];
+                }
+            }
+        }else{
+            echo 'Error';
+        }
 
-			header('location: ../settings');
-			echo '
-			<script>
-				location.replace("../settings");
-				window.location.href = "../settings"
-			</script>
-			';
+		if($Role == "admin"){
+			$UId = $_GET['UId'];
+			
+			$pdoResult = $PDOdb->prepare("DELETE FROM WebAddon_Users WHERE Id=:Id");
+			$pdoExec = $pdoResult->execute(array(":Id"=>$UId));
+
+			if($pdoExec){
+				header('location: ../settings');
+				echo '
+				<script>
+					location.replace("../settings");
+					window.location.href = "../settings"
+				</script>
+				';
+			}else{
+				$_SESSION['Error'] = "dberror";
+				
+				header('location: ../settings');
+				echo '
+				<script>
+					location.replace("../settings");
+					window.location.href = "../settings"
+				</script>
+				';
+		    }
 		}else{
         	header('location: ../');
 			echo '
@@ -162,7 +205,21 @@
 
 	// Change Lang
 	if (isset($_POST['updatelang'])) {
-		$Role = $_SESSION['Role'];
+		$UserId = $_SESSION['UserId'];
+        $pdoResult = $PDOdb->prepare("SELECT * FROM WebAddon_Users WHERE Id=:Id LIMIT 1");
+        $pdoExec = $pdoResult->execute(array(":Id"=>$UserId));
+        $rowcount = $pdoResult->rowCount();
+        
+        if($pdoExec){
+            if($rowcount != 0){
+                while($row = $pdoResult->fetch(PDO::FETCH_ASSOC)){
+                    $Role = $row['Role'];
+                }
+            }
+        }else{
+            echo 'Error';
+        }
+
 		if($Role == "admin"){
 			$lang = $_POST['lang'];
 			

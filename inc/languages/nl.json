@@ -41,5 +41,7 @@
 	"done":"Klaar",
 	"signout":"Uitloggen",
 	"loginwrong": "Ongeldige Gebruikersnaam Of Wachtwoord",
-	"languagesettings": "Taal Instellingen"
+	"languagesettings": "Taal Instellingen",
+	"dberror":"Er is een onbekende fout opgetreden!",
+	"usernametaken":"Deze gebruikersnaam is al in gebruik."
 }

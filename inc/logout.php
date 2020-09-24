@@ -5,7 +5,7 @@
 	unset($_SESSION['UserId']);
 	unset($_SESSION['Username']);
 	unset($_SESSION['Role']);
-
+	
 	header('location: ../');
 	echo '
 	<script>

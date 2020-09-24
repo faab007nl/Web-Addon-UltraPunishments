@@ -1,12 +1,13 @@
 <?php
     require_once "inc/Mobile_Detect.php";
+    require_once "inc/gensetup.php";
     $detect = new Mobile_Detect;
-
+    
     $configjson = file_get_contents('./inc/config.json');
 	$configjson = json_decode($configjson);
 	$version = $configjson->version;
 
-	if(file_exists("./inc/dbconfig.php") && file_exists("./inc/users.json")){
+	if(file_exists("./inc/dbconfig.php")){
 		header('location: ./');
 		echo '
 		<script>
@@ -18,7 +19,6 @@
 ?>
 <!DOCTYPE html>
 <html>
-
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
@@ -44,8 +44,19 @@
             <div class="panel">
                 <h3 class="h3custom">UltraPunishments&nbsp;v<?php echo $version; ?><br></h3><span class="madeby">Web Addon by&nbsp;<a href="https://www.spigotmc.org/members/eazyftw.55966/">EazyFTW</a>&nbsp;&amp;&nbsp;<a href="https://www.spigotmc.org/members/faab007.324536/">Faab007NL</a><br></span>
                 <h2>Setup</h2>
+                <?php
+                    if(isset($_SESSION['Error'])){
+                        if($_SESSION['Error'] == "dbconerror"){
+                            echo '<div class="error_msg"><strong>Can`t connect to Database.</strong></div>';
+                        }
+                        if($_SESSION['Error'] == "dberror"){
+                            echo '<div class="error_msg"><strong>An unknown error has occurred!</strong></div>';
+                        }
+                        $_SESSION['Error'] = "";
+                    }
+                ?>
                 <hr>
-                <form action="inc/server.php" method="post">
+                <form action="inc/gensetup.php" method="post">
                     <h5>Database</h5>
                     <div class="form-group">
                         <input class="form-control" type="text" placeholder="Hostname" name="dbhostname" required>

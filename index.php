@@ -1,7 +1,4 @@
 <?php
-    include 'inc/functions.php';
-    include 'inc/config.php';
-    include 'inc/mysql.php';
     include 'inc/server.php';
 
     if(isset($_SESSION['UserId'])){
@@ -46,6 +43,9 @@
                     if(isset($_SESSION['Error'])){
                         if($_SESSION['Error'] == "WrongUsernameOrPassword"){
                             echo '<div class="error_msg"><strong>'.$lang->loginwrong.'</strong></div>';
+                        }
+                        if($_SESSION['Error'] == "dberror"){
+                            echo '<div class="error_msg"><strong>'.$lang->dberror.'</strong></div>';
                         }
                         $_SESSION['Error'] = "";
                     }
