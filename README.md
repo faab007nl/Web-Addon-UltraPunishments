@@ -1,6 +1,9 @@
 UltraPunishments
 Web Addon by EazyFTW & Faab007NL
 
+SpigotMC Page:
+https://www.spigotmc.org/resources/web-addon-ultrapunishments.66173/
+
 Description:
 This web addon displays all of the punishments, Warnings, Users and Reports in a website.
 It uses mysql. So you will need to enable mysql plugin side.
