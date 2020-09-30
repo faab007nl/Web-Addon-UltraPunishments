@@ -9,7 +9,7 @@ This web addon displays all of the punishments, Warnings, Users and Reports in a
 It uses mysql. So you will need to enable mysql plugin side.
 
 Demo:
-https://upunaddon.fabiandingemans.nl/
+https://demo.ultrapluginswebaddons.com/upun/
 
 Installation:
 1) Download.
