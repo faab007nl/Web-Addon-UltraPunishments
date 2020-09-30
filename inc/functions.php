@@ -43,7 +43,7 @@ function toReadableSec($seconds) {
 }
 
 function CheckForUpdates(){
-	$updateconfig = file_get_contents('https://upunaddon.fabiandingemans.nl/new/version.json');
+	$updateconfig = file_get_contents('https://ultrapluginswebaddons.com/new/upun/version.json');
 	$updateconfig = json_decode($updateconfig);
 
 	$curconfig = file_get_contents('inc/config.json');
@@ -60,7 +60,7 @@ function CheckForUpdates(){
 }
 
 function GetNewVersion(){
-	$updateconfig = file_get_contents('https://upunaddon.fabiandingemans.nl/new/version.json');
+	$updateconfig = file_get_contents('https://ultrapluginswebaddons.com/new/upun/version.json');
 	$updateconfig = json_decode($updateconfig);
 
 	$newversion = $updateconfig->version;
